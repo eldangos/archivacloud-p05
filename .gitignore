@@ -1,0 +1,13 @@
+# Archivos de entorno (¡NUNCA SUBIR EL .env CON CREDENCIALES!)
+.env
+
+# Backend (Python)
+__pycache__/
+venv/
+env/
+*.pyc
+
+# Frontend (React)
+node_modules/
+dist/
+.DS_Store
