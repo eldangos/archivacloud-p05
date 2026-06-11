@@ -124,3 +124,33 @@ async def get_presigned_url(request: UploadRequest):
             status_code=500,
             detail="Error interno al generar la URL firmada."
         )
+    
+@app.get("/api/files")
+async def list_files():
+    try:
+
+        response = s3_client.list_objects_v2(
+            Bucket=S3_BUCKET,
+            Prefix="uploads/"
+        )
+
+        files = []
+
+        for obj in response.get("Contents", []):
+
+            files.append({
+                "key": obj["Key"],
+                "size": obj["Size"],
+                "lastModified": str(obj["LastModified"])
+            })
+
+        return files
+
+    except Exception as e:
+        print("ERROR S3:", e)
+
+    raise HTTPException(
+        status_code=500,
+        detail="Error al obtener la lista de archivos."
+    )
+
