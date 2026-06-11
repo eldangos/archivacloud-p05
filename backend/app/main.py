@@ -154,3 +154,27 @@ async def list_files():
         detail="Error al obtener la lista de archivos."
     )
 
+# ==========================================
+# SPRINT 2
+# DELETE /api/files/{key}
+# ==========================================
+
+@app.delete("/api/files/{key:path}")
+async def delete_file(key: str):
+    try:
+
+        s3_client.delete_object(
+            Bucket=S3_BUCKET,
+            Key=key
+        )
+
+        return {
+            "message": "Archivo eliminado correctamente",
+            "key": key
+        }
+
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Error al eliminar el archivo."
+        )
