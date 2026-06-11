@@ -41,7 +41,7 @@ s3_client = boto3.client(
 # PDF y JPG - Máximo 12 MB
 # ==========================================
 
-class UploadRequest(BaseModel):
+class UploadRequest(BaseModel): 
     fileName: str
     fileType: str
     fileSize: int = Field(..., description="Tamaño del archivo en bytes")
