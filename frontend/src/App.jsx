@@ -1,4 +1,31 @@
+import { useEffect, useState } from "react";
+
 function App() {
+
+  const [files, setFiles] = useState([]);
+
+const loadFiles = async () => {
+  try {
+
+    const response = await fetch(
+      "http://127.0.0.1:8000/api/files"
+    );
+
+    const data = await response.json();
+
+    console.log("ARCHIVOS:", data);
+
+    setFiles(data);
+
+  } catch (error) {
+    console.error("ERROR:", error);
+  }
+};
+
+  useEffect(() => {
+    loadFiles();
+  }, []);
+
   return (
     <div
       style={{
@@ -18,21 +45,9 @@ function App() {
           boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
         }}
       >
-        <h1
-          style={{
-            marginBottom: '10px',
-            color: '#2c3e50',
-          }}
-        >
-          ArchivaCloud
-        </h1>
+        <h1>ArchivaCloud</h1>
 
-        <p
-          style={{
-            color: '#7f8c8d',
-            marginBottom: '30px',
-          }}
-        >
+        <p>
           Sistema de gestión y almacenamiento de archivos.
         </p>
 
@@ -45,7 +60,33 @@ function App() {
             marginBottom: '25px',
           }}
         >
-          <strong>📊 Archivos subidos esta semana:</strong> 0
+          <strong>
+            📊 Archivos encontrados:
+          </strong>{" "}
+          {files.length}
+        </div>
+
+        <div
+          style={{
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
+            padding: '25px',
+            marginBottom: '25px'
+          }}
+        >
+          <h2>Archivos almacenados</h2>
+
+          {files.length === 0 ? (
+            <p>No hay archivos en el bucket.</p>
+          ) : (
+            <ul>
+              {files.map((file) => (
+                <li key={file.key}>
+                  {file.key}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div
@@ -55,54 +96,23 @@ function App() {
             padding: '25px',
           }}
         >
-          <h2
-            style={{
-              marginTop: 0,
-              color: '#34495e',
-            }}
-          >
-            Subir nuevo archivo
-          </h2>
-
-          <p
-            style={{
-              color: '#666',
-              fontSize: '14px',
-              lineHeight: '1.6',
-            }}
-          >
-            Formatos permitidos: <strong>PDF, JPG</strong>
-            <br />
-            Tamaño máximo: <strong>12 MB</strong>
-          </p>
+          <h2>Subir nuevo archivo</h2>
 
           <input
             type="file"
             accept=".pdf,.jpg,.jpeg"
-            style={{
-              marginTop: '15px',
-              marginBottom: '20px',
-              width: '100%',
-            }}
           />
 
-          <button
-            style={{
-              backgroundColor: '#3498db',
-              color: 'white',
-              border: 'none',
-              padding: '12px 20px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '15px',
-            }}
-          >
+          <br />
+          <br />
+
+          <button>
             Subir Archivo
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

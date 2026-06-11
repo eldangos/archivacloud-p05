@@ -4,13 +4,25 @@ import boto3
 import os
 import uuid
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 # Cargar variables de entorno
 load_dotenv()
 
 app = FastAPI()
 
-# Variables de entorno
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Variables de 
+
 S3_BUCKET = os.getenv("S3_BUCKET")
 AWS_REGION = os.getenv("AWS_REGION")
 
