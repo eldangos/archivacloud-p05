@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Variables de 
+
 
 S3_BUCKET = os.getenv("S3_BUCKET")
 AWS_REGION = os.getenv("AWS_REGION")
@@ -34,12 +34,6 @@ s3_client = boto3.client(
     aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
     aws_session_token=os.getenv("AWS_SESSION_TOKEN")
 )
-
-
-# ==========================================
-# MODELO DE VALIDACIÓN (P-05)
-# PDF y JPG - Máximo 12 MB
-# ==========================================
 
 class UploadRequest(BaseModel): 
     fileName: str
@@ -73,20 +67,12 @@ class UploadRequest(BaseModel):
         return value
 
 
-# ==========================================
-# HEALTH CHECK
-# ==========================================
 
 @app.get("/healthz")
 async def health_check():
     return {
         "status": "ok"
     }
-
-
-# ==========================================
-# TEST VARIABLES DE ENTORNO
-# ==========================================
 
 @app.get("/test-env")
 async def test_env():
@@ -95,11 +81,6 @@ async def test_env():
         "region": AWS_REGION
     }
 
-
-# ==========================================
-# SPRINT 1
-# POST /api/upload/presigned-url
-# ==========================================
 
 @app.post("/api/upload/presigned-url")
 async def get_presigned_url(request: UploadRequest):
@@ -166,10 +147,6 @@ async def list_files():
         detail="Error al obtener la lista de archivos."
     )
 
-# ==========================================
-# SPRINT 2
-# DELETE /api/files/{key}
-# ==========================================
 
 @app.delete("/api/files/{key:path}")
 async def delete_file(key: str):
