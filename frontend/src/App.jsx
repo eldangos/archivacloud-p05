@@ -3,6 +3,16 @@ import React, { useEffect, useState } from 'react'
 function App() {
 
   const [files, setFiles] = useState([])
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+const oneWeekAgo = new Date()
+oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+const weeklyFilesCount = files.filter((file) => {
+  const fileDate = new Date(file.lastModified)
+  return fileDate >= oneWeekAgo
+}).length
 
   const loadFiles = async () => {
     try {
@@ -20,6 +30,107 @@ function App() {
     }
   }
 
+  const handleUpload = async () => {
+
+    if (!selectedFile) {
+      alert('Seleccione un archivo')
+      return
+    }
+
+    try {
+
+      setLoading(true)
+
+      const response = await fetch(
+        'http://127.0.0.1:8000/api/upload/presigned-url',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fileName: selectedFile.name,
+            fileType: selectedFile.type,
+            fileSize: selectedFile.size
+          })
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Error obteniendo URL firmada')
+      }
+
+      const data = await response.json()
+
+      const uploadResponse = await fetch(
+        data.presignedUrl,
+        {
+          method: 'PUT',
+          body: selectedFile,
+          headers: {
+            'Content-Type': selectedFile.type
+          }
+        }
+      )
+
+      if (!uploadResponse.ok) {
+        throw new Error('Error subiendo archivo a S3')
+      }
+
+      alert('Archivo subido correctamente')
+      await loadFiles()
+
+      setSelectedFile(null)
+
+    } catch (error) {
+
+      console.error(error)
+      alert(error.message)
+
+    } finally {
+
+      setLoading(false)
+
+    }
+
+  }
+
+  const handleDelete = async (key) => {
+
+  const confirmDelete = window.confirm(
+    '¿Está seguro de eliminar este archivo?'
+  )
+
+  if (!confirmDelete) {
+    return
+  }
+
+  try {
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/files/${encodeURIComponent(key)}`,
+      {
+        method: 'DELETE'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('No se pudo eliminar el archivo')
+    }
+
+    await loadFiles()
+
+    alert('Archivo eliminado correctamente')
+
+  } catch (error) {
+
+    console.error(error)
+    alert(error.message)
+
+  }
+
+}
+
   useEffect(() => {
     loadFiles()
   }, [])
@@ -36,7 +147,6 @@ function App() {
     >
       <h1>ArchivaCloud - Pareja 05</h1>
 
-      {/* Feature Extra Obligatoria P-05 (NO BORRAR) */}
       <div
         style={{
           backgroundColor: '#005f73',
@@ -45,10 +155,9 @@ function App() {
           borderRadius: '5px'
         }}
       >
-        <h3>Archivos subidos esta semana: 0</h3>
+        <h3>Archivos subidos esta semana: {weeklyFilesCount}</h3>
       </div>
 
-      {/* Lista de archivos */}
       <div
         style={{
           border: '1px solid #555',
@@ -64,13 +173,9 @@ function App() {
 
         {
           files.length === 0 ? (
-
             <p>No hay archivos almacenados.</p>
-
           ) : (
-
             files.map((file) => (
-
               <div
                 key={file.key}
                 style={{
@@ -88,29 +193,27 @@ function App() {
                   {file.key.replace('uploads/', '')}
                 </span>
 
-                <button
-                  style={{
-                    cursor: 'pointer',
-                    backgroundColor: '#d32f2f',
-                    color: 'white',
-                    border: 'none',
-                    padding: '5px 10px'
-                  }}
-                >
-                  [Eliminar]
-                </button>
+              <button
+                onClick={() => handleDelete(file.key)}
+                style={{
+                  cursor: 'pointer',
+                  backgroundColor: '#d32f2f',
+                  color: 'white',
+                  border: 'none',
+                  padding: '5px 10px'
+                }}
+              >
+                [Eliminar]
+              </button>
 
               </div>
-
             ))
-
           )
         }
 
         <p>----------------------------------------</p>
       </div>
 
-      {/* Subida de archivos */}
       <div
         style={{
           border: '1px solid #555',
@@ -133,6 +236,7 @@ function App() {
         <input
           type="file"
           accept=".pdf,.jpg,.jpeg"
+          onChange={(e) => setSelectedFile(e.target.files[0])}
           style={{
             display: 'block',
             margin: '15px 0'
@@ -140,6 +244,8 @@ function App() {
         />
 
         <button
+          onClick={handleUpload}
+          disabled={loading}
           style={{
             padding: '10px 20px',
             cursor: 'pointer',
@@ -148,7 +254,7 @@ function App() {
             border: 'none'
           }}
         >
-          [Subir]
+          {loading ? 'Subiendo...' : '[Subir]'}
         </button>
 
       </div>
