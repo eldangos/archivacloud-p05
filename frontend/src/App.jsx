@@ -37,6 +37,11 @@ const weeklyFilesCount = files.filter((file) => {
       return
     }
 
+    if (selectedFile.size > 12 * 1024 * 1024) {
+      alert('El archivo supera el tamaño máximo permitido de 12 MB')
+      return
+    }
+
     try {
 
       setLoading(true)

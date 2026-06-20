@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, field_validator
 import boto3
 import os
+import re
 import uuid
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,9 +37,31 @@ s3_client = boto3.client(
 )
 
 class UploadRequest(BaseModel): 
+    
     fileName: str
     fileType: str
     fileSize: int = Field(..., description="Tamaño del archivo en bytes")
+
+    @field_validator("fileName")
+    def validate_file_name(cls, value):
+
+        if "." not in value:
+            raise ValueError(
+                "Nombre de archivo inválido."
+            )
+
+        sanitized = re.sub(
+            r'[^a-zA-Z0-9._-]',
+            '',
+            value
+        )
+
+        if not sanitized:
+            raise ValueError(
+                "Nombre de archivo inválido."
+            )
+
+        return sanitized
 
     @field_validator("fileType")
     def validate_file_type(cls, value):
@@ -139,8 +162,11 @@ async def list_files():
 
         return files
 
-    except Exception as e:
-        print("ERROR S3:", e)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Error al obtener la lista de archivos."
+    )
 
     raise HTTPException(
         status_code=500,

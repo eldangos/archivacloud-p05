@@ -23,3 +23,45 @@ Sistema de almacenamiento de archivos en Amazon S3.
 2. Crear y activar el entorno virtual: `python -m venv venv` y `.\venv\Scripts\activate`
 3. Instalar dependencias: `pip install -r requirements.txt`
 4. Ejecutar servidor: `python -m uvicorn app.main:app --reload`
+
+
+## Se ejecutó npm audit en el frontend obteniendo 0 vulnerabilidades.
+
+## Se ejecutó pip-audit en el entorno Python. Las vulnerabilidades reportadas
+correspondían principalmente a paquetes instalados globalmente (Django,
+OpenCV, Streamlit, etc.) que no forman parte de las dependencias utilizadas
+por ArchivaCloud.
+
+## Las dependencias declaradas en requirements.txt fueron revisadas y se utilizan
+versiones actualizadas de los paquetes críticos del proyecto.
+
+
+
+## SEC-05 – IAM mínimo privilegio
+
+El proyecto fue desarrollado utilizando AWS Academy Learner Lab. Debido a las restricciones impuestas por el entorno académico, no fue posible crear usuarios IAM propios ni modificar los roles asignados por AWS Academy.
+
+La aplicación utiliza exclusivamente las operaciones necesarias sobre Amazon S3 para su funcionamiento:
+
+PutObject
+ListBucket
+DeleteObject
+GetObject (si fuese requerido)
+
+Se verificó que el acceso al rol del laboratorio (LabRole) está restringido y que las políticas asociadas no pueden ser inspeccionadas por los estudiantes, ya que la acción iam:GetPolicy se encuentra explícitamente denegada por AWS Academy.
+
+Por esta razón, la gestión de privilegios mínimos queda delegada al entorno administrado del laboratorio.
+
+
+## SEC-10 – TLS de extremo a extremo
+
+Durante el desarrollo local se utilizaron endpoints HTTP en localhost para facilitar las pruebas:
+
+http://localhost:5173
+http://127.0.0.1:8000
+
+Sin embargo, en un entorno de producción la aplicación debe desplegarse utilizando HTTPS tanto para el frontend como para el backend.
+
+Las cargas de archivos hacia Amazon S3 se realizan mediante URLs prefirmadas generadas por AWS, las cuales utilizan HTTPS por defecto, garantizando cifrado en tránsito entre el navegador y el servicio S3.
+
+De esta manera, la arquitectura final contempla comunicaciones protegidas mediante TLS entre todos los componentes expuestos a Internet.
