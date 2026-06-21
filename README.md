@@ -6,7 +6,7 @@
 
 ## Descripción
 Sistema de almacenamiento de archivos en Amazon S3. 
-**Parámetros únicos respetados (Pareja P-05):**
+*Parámetros únicos respetados (Pareja P-05):*
 - Tipos de archivo permitidos: PDF, JPG
 - Tamaño máximo: 12 MB
 - Nombre del bucket: archivacloud-p05
@@ -19,10 +19,10 @@ Sistema de almacenamiento de archivos en Amazon S3.
 - Nube: AWS S3 y IAM
 
 ## Cómo ejecutar el backend localmente
-1. Entrar a la carpeta: `cd backend`
-2. Crear y activar el entorno virtual: `python -m venv venv` y `.\venv\Scripts\activate`
-3. Instalar dependencias: `pip install -r requirements.txt`
-4. Ejecutar servidor: `python -m uvicorn app.main:app --reload`
+1. Entrar a la carpeta: cd backend
+2. Crear y activar el entorno virtual: python -m venv venv y .\venv\Scripts\activate
+3. Instalar dependencias: pip install -r requirements.txt
+4. Ejecutar servidor: python -m uvicorn app.main:app --reload
 
 
 ## Se ejecutó npm audit en el frontend obteniendo 0 vulnerabilidades.
@@ -65,3 +65,17 @@ Sin embargo, en un entorno de producción la aplicación debe desplegarse utiliz
 Las cargas de archivos hacia Amazon S3 se realizan mediante URLs prefirmadas generadas por AWS, las cuales utilizan HTTPS por defecto, garantizando cifrado en tránsito entre el navegador y el servicio S3.
 
 De esta manera, la arquitectura final contempla comunicaciones protegidas mediante TLS entre todos los componentes expuestos a Internet.
+
+
+## SEC-10 – TLS de extremo a extremo
+
+Durante el desarrollo local se utilizan los endpoints
+http://localhost:5173 y http://127.0.0.1:8000 para pruebas.
+
+Las cargas de archivos hacia Amazon S3 utilizan URLs prefirmadas
+generadas por AWS, las cuales emplean HTTPS por defecto.
+
+En un entorno de producción, el frontend y backend deberán
+publicarse utilizando HTTPS mediante certificados TLS válidos,
+garantizando comunicaciones cifradas entre cliente, backend y
+servicios AWS.
