@@ -94,11 +94,11 @@ function App() {
 
     try {
       const response = await fetch(
-        http://127.0.0.1:8000/api/files/${encodeURIComponent(key)},
-        {
-          method: 'DELETE'
-        }
-      )
+  `http://127.0.0.1:8000/api/files/${encodeURIComponent(key)}`,
+  {
+    method: 'DELETE'
+  }
+)
 
       if (!response.ok) {
         throw new Error('No se pudo eliminar el archivo')
