@@ -1,37 +1,27 @@
 import React, { useEffect, useState } from 'react'
 
 function App() {
-
   const [files, setFiles] = useState([])
   const [selectedFile, setSelectedFile] = useState(null)
   const [loading, setLoading] = useState(false)
-
-const oneWeekAgo = new Date()
-oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
-const weeklyFilesCount = files.filter((file) => {
-  const fileDate = new Date(file.lastModified)
-  return fileDate >= oneWeekAgo
-}).length
+  
+  // Ahora el contador semanal viene directamente calculado desde el historial del backend
+  const [weeklyFilesCount, setWeeklyFilesCount] = useState(0)
 
   const loadFiles = async () => {
     try {
-
-      const response = await fetch(
-        'http://127.0.0.1:8000/api/files'
-      )
-
+      const response = await fetch('http://127.0.0.1:8000/api/files')
       const data = await response.json()
-
-      setFiles(data)
-
+      
+      // Separamos los datos devueltos por el nuevo formato del backend
+      setFiles(data.activeFiles || [])
+      setWeeklyFilesCount(data.weeklyUploadsCount || 0)
     } catch (error) {
       console.error('Error cargando archivos:', error)
     }
   }
 
   const handleUpload = async () => {
-
     if (!selectedFile) {
       alert('Seleccione un archivo')
       return
@@ -43,7 +33,6 @@ const weeklyFilesCount = files.filter((file) => {
     }
 
     try {
-
       setLoading(true)
 
       const response = await fetch(
@@ -84,57 +73,45 @@ const weeklyFilesCount = files.filter((file) => {
 
       alert('Archivo subido correctamente')
       await loadFiles()
-
       setSelectedFile(null)
 
-    } catch (error) {
+      document.getElementById('file-upload').value = "";
 
+    } catch (error) {
       console.error(error)
       alert(error.message)
-
     } finally {
-
       setLoading(false)
-
     }
-
   }
 
   const handleDelete = async (key) => {
+    const confirmDelete = window.confirm('¿Está seguro de eliminar este archivo?')
 
-  const confirmDelete = window.confirm(
-    '¿Está seguro de eliminar este archivo?'
-  )
-
-  if (!confirmDelete) {
-    return
-  }
-
-  try {
-
-    const response = await fetch(
-      `http://127.0.0.1:8000/api/files/${encodeURIComponent(key)}`,
-      {
-        method: 'DELETE'
-      }
-    )
-
-    if (!response.ok) {
-      throw new Error('No se pudo eliminar el archivo')
+    if (!confirmDelete) {
+      return
     }
 
-    await loadFiles()
+    try {
+      const response = await fetch(
+        http://127.0.0.1:8000/api/files/${encodeURIComponent(key)},
+        {
+          method: 'DELETE'
+        }
+      )
 
-    alert('Archivo eliminado correctamente')
+      if (!response.ok) {
+        throw new Error('No se pudo eliminar el archivo')
+      }
 
-  } catch (error) {
+      await loadFiles()
+      alert('Archivo eliminado correctamente')
 
-    console.error(error)
-    alert(error.message)
-
+    } catch (error) {
+      console.error(error)
+      alert(error.message)
+    }
   }
-
-}
 
   useEffect(() => {
     loadFiles()
@@ -143,42 +120,73 @@ const weeklyFilesCount = files.filter((file) => {
   return (
     <div
       style={{
-        padding: '20px',
-        fontFamily: 'monospace',
-        backgroundColor: '#1e1e1e',
-        color: '#fff',
-        minHeight: '100vh'
+        padding: '40px 20px',
+        fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        backgroundColor: '#121212',
+        color: '#e0e0e0',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center'
       }}
     >
-      <h1>ArchivaCloud - Pareja 05</h1>
-
-      <div
+      <h1
         style={{
-          backgroundColor: '#005f73',
-          padding: '10px',
-          marginBottom: '20px',
-          borderRadius: '5px'
+          fontSize: '40px',
+          fontWeight: '700',
+          marginBottom: '30px',
+          color: '#ffffff',
+          letterSpacing: '-0.5px'
         }}
       >
-        <h3>Archivos subidos esta semana: {weeklyFilesCount}</h3>
+        ☁️ ArchivaCloud
+      </h1>
+
+      {/* Banner Semanal */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%)',
+          padding: '20px 25px',
+          width: '100%',
+          maxWidth: '800px',
+          borderRadius: '12px',
+          textAlign: 'center',
+          marginBottom: '30px',
+          boxShadow: '0 4px 15px rgba(13, 110, 253, 0.2)',
+          color: '#ffffff'
+        }}
+      >
+        <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600' }}>
+          📊 Archivos subidos esta semana: {weeklyFilesCount}
+        </h2>
       </div>
 
+      {/* Lista de Archivos */}
       <div
         style={{
-          border: '1px solid #555',
-          padding: '20px',
-          maxWidth: '500px',
-          marginBottom: '20px',
-          borderRadius: '5px'
+          border: '1px solid #333',
+          padding: '25px',
+          width: '100%',
+          maxWidth: '800px',
+          marginBottom: '25px',
+          borderRadius: '12px',
+          backgroundColor: '#1e1e1e',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          boxSizing: 'border-box'
         }}
       >
-        <p>Archivos encontrados: {files.length}</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ margin: 0, color: '#fff', fontSize: '18px' }}>Archivos encontrados</h3>
+          <span style={{ backgroundColor: '#333', padding: '4px 12px', borderRadius: '20px', fontSize: '14px', fontWeight: 'bold' }}>
+            {files.length}
+          </span>
+        </div>
 
-        <p>----------------------------------------</p>
-
-        {
-          files.length === 0 ? (
-            <p>No hay archivos almacenados.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {files.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '30px 0', color: '#888' }}>
+              <p style={{ margin: 0 }}>No hay archivos almacenados actualmente.</p>
+            </div>
           ) : (
             files.map((file) => (
               <div
@@ -186,84 +194,101 @@ const weeklyFilesCount = files.filter((file) => {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  marginBottom: '10px'
+                  alignItems: 'center',
+                  padding: '12px 15px',
+                  backgroundColor: '#252525',
+                  borderRadius: '8px',
+                  border: '1px solid #333',
+                  transition: 'background-color 0.2s ease'
                 }}
               >
-                <span>
-                  {
-                    file.key.toLowerCase().endsWith('.pdf')
-                      ? '📄'
-                      : '🖼️'
-                  }{' '}
+                <span style={{ fontSize: '15px', color: '#ddd', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '18px' }}>
+                    {file.key.toLowerCase().endsWith('.pdf') ? '📄' : '🖼️'}
+                  </span>
                   {file.key.replace('uploads/', '')}
                 </span>
 
-              <button
-                onClick={() => handleDelete(file.key)}
-                style={{
-                  cursor: 'pointer',
-                  backgroundColor: '#d32f2f',
-                  color: 'white',
-                  border: 'none',
-                  padding: '5px 10px'
-                }}
-              >
-                [Eliminar]
-              </button>
-
+                <button
+                  onClick={() => handleDelete(file.key)}
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: 'transparent',
+                    color: '#ef4444',
+                    border: '1px solid #ef4444',
+                    borderRadius: '6px',
+                    padding: '6px 12px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => { e.target.style.backgroundColor = '#ef4444'; e.target.style.color = '#fff'; }}
+                  onMouseOut={(e) => { e.target.style.backgroundColor = 'transparent'; e.target.style.color = '#ef4444'; }}
+                >
+                  Eliminar
+                </button>
               </div>
             ))
-          )
-        }
-
-        <p>----------------------------------------</p>
+          )}
+        </div>
       </div>
 
+      {/* Zona de Subida */}
       <div
         style={{
-          border: '1px solid #555',
-          padding: '20px',
-          maxWidth: '500px',
-          borderRadius: '5px'
+          border: '1px solid #333',
+          padding: '25px',
+          width: '100%',
+          maxWidth: '800px',
+          borderRadius: '12px',
+          backgroundColor: '#1e1e1e',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          boxSizing: 'border-box'
         }}
       >
-        <h2>Subir nuevo archivo</h2>
+        <h3 style={{ margin: '0 0 10px 0', color: '#fff', fontSize: '18px' }}>Subir nuevo archivo</h3>
 
-        <p
-          style={{
-            fontSize: '14px',
-            color: '#aaa'
-          }}
-        >
-          Formatos permitidos: <b>PDF, JPG</b> | Tamaño máximo: <b>12 MB</b>
+        <p style={{ fontSize: '14px', color: '#aaa', margin: '0 0 20px 0' }}>
+          Formatos permitidos: <b style={{ color: '#fff' }}>PDF, JPG</b> | Tamaño máximo: <b style={{ color: '#fff' }}>12 MB</b>
         </p>
 
-        <input
-          type="file"
-          accept=".pdf,.jpg,.jpeg"
-          onChange={(e) => setSelectedFile(e.target.files[0])}
-          style={{
-            display: 'block',
-            margin: '15px 0'
-          }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+          <input
+            id="file-upload"
+            type="file"
+            accept=".pdf,.jpg,.jpeg"
+            onChange={(e) => setSelectedFile(e.target.files[0])}
+            style={{
+              flex: '1',
+              padding: '10px',
+              backgroundColor: '#252525',
+              border: '1px dashed #555',
+              borderRadius: '8px',
+              color: '#ddd',
+              cursor: 'pointer'
+            }}
+          />
 
-        <button
-          onClick={handleUpload}
-          disabled={loading}
-          style={{
-            padding: '10px 20px',
-            cursor: 'pointer',
-            backgroundColor: '#4caf50',
-            color: 'white',
-            border: 'none'
-          }}
-        >
-          {loading ? 'Subiendo...' : '[Subir]'}
-        </button>
-
+          <button
+            onClick={handleUpload}
+            disabled={loading || !selectedFile}
+            style={{
+              padding: '12px 24px',
+              cursor: (loading || !selectedFile) ? 'not-allowed' : 'pointer',
+              backgroundColor: (loading || !selectedFile) ? '#333' : '#22c55e',
+              color: (loading || !selectedFile) ? '#888' : '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: '600',
+              fontSize: '15px',
+              transition: 'background-color 0.2s ease',
+              minWidth: '130px'
+            }}
+          >
+            {loading ? 'Subiendo...' : 'Subir Archivo'}
+          </button>
+        </div>
       </div>
-
     </div>
   )
 }
