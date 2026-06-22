@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
-
+// Estado que almacena los archivos obtenidos desde el backend
 function App() {
   const [files, setFiles] = useState([])
+  // Estado que guarda el archivo seleccionado por el usuario
   const [selectedFile, setSelectedFile] = useState(null)
+  // Estado utilizado para mostrar el proceso de carga
   const [loading, setLoading] = useState(false)
   
   // Ahora el contador semanal viene directamente calculado desde el historial del backend
   const [weeklyFilesCount, setWeeklyFilesCount] = useState(0)
-
+// Obtiene los archivos almacenados y el contador semanal desde la API
   const loadFiles = async () => {
     try {
       const response = await fetch('http://127.0.0.1:8000/api/files')
@@ -20,7 +22,7 @@ function App() {
       console.error('Error cargando archivos:', error)
     }
   }
-
+// Gestiona el proceso completo de subida de archivos
   const handleUpload = async () => {
     if (!selectedFile) {
       alert('Seleccione un archivo')
@@ -112,7 +114,7 @@ function App() {
       alert(error.message)
     }
   }
-
+// Carga los datos iniciales al abrir la aplicación
   useEffect(() => {
     loadFiles()
   }, [])
