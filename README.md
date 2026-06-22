@@ -24,6 +24,24 @@ Sistema de almacenamiento de archivos en Amazon S3.
 3. Instalar dependencias: pip install -r requirements.txt
 4. Ejecutar servidor: python -m uvicorn app.main:app --reload
 
+## Cómo ejecutar el frontend localmente
+1. Entrar a la carpeta: cd frontend
+2. Instalar dependencias: npm install
+3. Ejecutar servidor: npm run dev
+
+## Arquitectura
+El frontend (React) solicita una URL prefirmada al backend (FastAPI). Una vez obtenida, el frontend sube el archivo directamente a Amazon S3 sin sobrecargar el servidor backend [2, 3].
+![Diagrama de Arquitectura](docs/arquitectura.jpg)
+
+## Variables de Entorno
+| Nombre | Descripción | Ejemplo |
+|--------|-------------|---------|
+| AWS_ACCESS_KEY_ID | Clave de acceso de AWS Academy | ASIA... |
+| AWS_SECRET_ACCESS_KEY | Clave secreta de AWS Academy | aBcD... |
+| AWS_SESSION_TOKEN | Token temporal de la sesión | IQoJ... |
+| S3_BUCKET | Nombre del bucket | archivacloud-p05 |
+| AWS_REGION | Región de AWS | us-east-1 |
+
 
 ## Se ejecutó npm audit en el frontend obteniendo 0 vulnerabilidades.
 
@@ -65,17 +83,3 @@ Sin embargo, en un entorno de producción la aplicación debe desplegarse utiliz
 Las cargas de archivos hacia Amazon S3 se realizan mediante URLs prefirmadas generadas por AWS, las cuales utilizan HTTPS por defecto, garantizando cifrado en tránsito entre el navegador y el servicio S3.
 
 De esta manera, la arquitectura final contempla comunicaciones protegidas mediante TLS entre todos los componentes expuestos a Internet.
-
-
-## SEC-10 – TLS de extremo a extremo
-
-Durante el desarrollo local se utilizan los endpoints
-http://localhost:5173 y http://127.0.0.1:8000 para pruebas.
-
-Las cargas de archivos hacia Amazon S3 utilizan URLs prefirmadas
-generadas por AWS, las cuales emplean HTTPS por defecto.
-
-En un entorno de producción, el frontend y backend deberán
-publicarse utilizando HTTPS mediante certificados TLS válidos,
-garantizando comunicaciones cifradas entre cliente, backend y
-servicios AWS.
