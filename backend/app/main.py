@@ -11,9 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Cargar variables de entorno
 load_dotenv()
-
+# Inicializa la aplicación FastAPI
 app = FastAPI()
-
+# Configuración CORS para permitir peticiones desde el frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -23,11 +23,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+# Obtiene la configuración de AWS desde las variables de entorno
 S3_BUCKET = os.getenv("S3_BUCKET")
 AWS_REGION = os.getenv("AWS_REGION")
 
-# Cliente S3
+# Crea el cliente de Amazon S3 para gestionar archivos
 s3_client = boto3.client(
     "s3",
     region_name=AWS_REGION,
@@ -35,9 +35,9 @@ s3_client = boto3.client(
     aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
     aws_session_token=os.getenv("AWS_SESSION_TOKEN")
 )
-
+# Archivo local utilizado para almacenar el historial de subidas
 HISTORY_FILE = "history.json"
-
+# Registra cada subida realizada para mantener estadísticas históricas
 def registrar_subida_historica(key: str):
     """Guarda un registro al momento exacto de generar la URL de subida"""
     historial = []
@@ -58,12 +58,12 @@ def registrar_subida_historica(key: str):
             json.dump(historial, f, indent=4)
     except Exception as e:
         print("Error guardando en historial:", e)
-
+# Modelo que valida los datos recibidos para la subida de archivos
 class UploadRequest(BaseModel): 
     fileName: str
     fileType: str
     fileSize: int = Field(..., description="Tamaño del archivo en bytes")
-
+# Valida y sanitiza el nombre del archivo
     @field_validator("fileName")
     def validate_file_name(cls, value):
         if "." not in value:
@@ -72,33 +72,33 @@ class UploadRequest(BaseModel):
         if not sanitized:
             raise ValueError("Nombre de archivo inválido.")
         return sanitized
-
+# Verifica que el tipo de archivo sea permitido
     @field_validator("fileType")
     def validate_file_type(cls, value):
         allowed_types = ["application/pdf", "image/jpeg", "image/jpg"]
         if value not in allowed_types:
             raise ValueError("Solo se permiten archivos PDF y JPG.")
         return value
-
+# Verifica que el tamaño del archivo no supere el límite permitido
     @field_validator("fileSize")
     def validate_file_size(cls, value):
         max_size = 12 * 1024 * 1024
         if value > max_size:
             raise ValueError("El archivo supera el tamaño máximo permitido de 12 MB.")
         return value
-
+# Endpoint para comprobar que la API está funcionando correctamente
 @app.get("/healthz")
 async def health_check():
     return {"status": "ok"}
-
+# Endpoint de prueba para verificar variables de entorno
 @app.get("/test-env")
 async def test_env():
     return {"bucket": S3_BUCKET, "region": AWS_REGION}
-
+# Genera una URL firmada para subir archivos directamente a Amazon S3
 @app.post("/api/upload/presigned-url")
 async def get_presigned_url(request: UploadRequest):
     try:
-        extension = request.fileName.split(".")[-1].lower()
+        extension = request.fileName.split(".")[-1].lower() 
         unique_filename = f"{uuid.uuid4()}.{extension}"
         key = f"uploads/{unique_filename}"
 
@@ -127,7 +127,7 @@ async def get_presigned_url(request: UploadRequest):
 @app.get("/api/files")
 async def list_files():
     try:
-        response = s3_client.list_objects_v2(
+        response = s3_client.list_objects_v2(                  
             Bucket=S3_BUCKET,
             Prefix="uploads/"
         )
@@ -140,7 +140,7 @@ async def list_files():
                 "lastModified": obj["LastModified"].isoformat() 
             })
 
-        # --- LÓGICA INTELIGENTE DE SINCRONIZACIÓN ---
+        # --- LÓGICA INTELIGENTE DE SINCRONIZACIÓN --- # Carga el historial local de subidas si existe
         historial = []
         if os.path.exists(HISTORY_FILE):
             try:
