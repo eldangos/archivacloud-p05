@@ -11,8 +11,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Cargar variables de entorno
 load_dotenv()
+
 # Inicializa la aplicación FastAPI
 app = FastAPI()
+
 # Configuración CORS para permitir peticiones desde el frontend
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +25,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # Obtiene la configuración de AWS desde las variables de entorno
 S3_BUCKET = os.getenv("S3_BUCKET")
 AWS_REGION = os.getenv("AWS_REGION")
@@ -35,8 +38,22 @@ s3_client = boto3.client(
     aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
     aws_session_token=os.getenv("AWS_SESSION_TOKEN")
 )
-# Archivo local utilizado para almacenar el historial de subidas
-HISTORY_FILE = "history.json"
+
+# Cliente DynamoDB
+dynamodb = boto3.resource(
+    "dynamodb",
+    region_name=AWS_REGION,
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    aws_session_token=os.getenv("AWS_SESSION_TOKEN")
+)
+
+TABLE_NAME = "database_dynamo"
+table = dynamodb.Table(TABLE_NAME)
+
+
+
+
 # Registra cada subida realizada para mantener estadísticas históricas
 def registrar_subida_historica(key: str):
     """Guarda un registro al momento exacto de generar la URL de subida"""
@@ -114,7 +131,7 @@ async def get_presigned_url(request: UploadRequest):
 
         public_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{key}"
         
-        registrar_subida_historica(key)
+        
 
         return {
             "presignedUrl": presigned_url,
