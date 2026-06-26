@@ -145,28 +145,30 @@ async def get_presigned_url(request: UploadRequest):
 
         public_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{key}"
 
-        # Registrar la subida en el historial local
         registrar_subida_historica(key)
 
-        # Registrar los metadatos en DynamoDB
-        dynamodb_table.put_item(
-            Item={
-                "id_tabla": str(uuid.uuid4()),
-                "nombre_proyecto": "ArchivaCloud P-05",
-                "nombre_archivo": request.fileName,
-                "s3_key": key,
-                "tipo": request.fileType,
-                "tamano": request.fileSize,
-                "fecha_subida": datetime.now(timezone.utc).isoformat()
-            }
-        )
+        try:
+            dynamodb_table.put_item(
+                Item={
+                    "id_tabla": str(uuid.uuid4()),
+                    "nombre_proyecto": "ArchivaCloud P-05",
+                    "nombre_archivo": request.fileName,
+                    "s3_key": key,
+                    "tipo": request.fileType,
+                    "tamano": request.fileSize,
+                    "fecha_subida": datetime.now(timezone.utc).isoformat()
+                    
+                }
+            )
+        except Exception as e:
+            print("Error al guardar en DynamoDB:", e)
 
         return {
             "presignedUrl": presigned_url,
             "key": key,
             "publicUrl": public_url
         }
-    
+
     except Exception as e:
         print("ERROR:", e)
         raise HTTPException(
