@@ -39,7 +39,9 @@ s3_client = boto3.client(
     aws_session_token=os.getenv("AWS_SESSION_TOKEN")
 )
 
-# Cliente DynamoDB
+HISTORY_FILE = "history.json"
+
+# Recurso de DynamoDB
 dynamodb = boto3.resource(
     "dynamodb",
     region_name=AWS_REGION,
@@ -48,38 +50,43 @@ dynamodb = boto3.resource(
     aws_session_token=os.getenv("AWS_SESSION_TOKEN")
 )
 
-TABLE_NAME = "database_dynamo"
-table = dynamodb.Table(TABLE_NAME)
+# Referencia a la tabla
+dynamodb_table = dynamodb.Table("database_dynamo")
 
 
 
 
 # Registra cada subida realizada para mantener estadísticas históricas
 def registrar_subida_historica(key: str):
-    """Guarda un registro al momento exacto de generar la URL de subida"""
     historial = []
+
     if os.path.exists(HISTORY_FILE):
         try:
             with open(HISTORY_FILE, "r") as f:
                 historial = json.load(f)
         except Exception:
             historial = []
-            
+
     historial.append({
         "key": key,
         "timestamp": datetime.now(timezone.utc).isoformat()
     })
-    
+
     try:
         with open(HISTORY_FILE, "w") as f:
             json.dump(historial, f, indent=4)
     except Exception as e:
-        print("Error guardando en historial:", e)
+        print("Error guardando historial:", e)
+
+
+
 # Modelo que valida los datos recibidos para la subida de archivos
 class UploadRequest(BaseModel): 
     fileName: str
     fileType: str
     fileSize: int = Field(..., description="Tamaño del archivo en bytes")
+
+
 # Valida y sanitiza el nombre del archivo
     @field_validator("fileName")
     def validate_file_name(cls, value):
@@ -89,6 +96,8 @@ class UploadRequest(BaseModel):
         if not sanitized:
             raise ValueError("Nombre de archivo inválido.")
         return sanitized
+    
+
 # Verifica que el tipo de archivo sea permitido
     @field_validator("fileType")
     def validate_file_type(cls, value):
@@ -96,6 +105,7 @@ class UploadRequest(BaseModel):
         if value not in allowed_types:
             raise ValueError("Solo se permiten archivos PDF y JPG.")
         return value
+    
 # Verifica que el tamaño del archivo no supere el límite permitido
     @field_validator("fileSize")
     def validate_file_size(cls, value):
@@ -103,14 +113,18 @@ class UploadRequest(BaseModel):
         if value > max_size:
             raise ValueError("El archivo supera el tamaño máximo permitido de 12 MB.")
         return value
+    
 # Endpoint para comprobar que la API está funcionando correctamente
 @app.get("/healthz")
 async def health_check():
     return {"status": "ok"}
+
 # Endpoint de prueba para verificar variables de entorno
 @app.get("/test-env")
 async def test_env():
     return {"bucket": S3_BUCKET, "region": AWS_REGION}
+
+
 # Genera una URL firmada para subir archivos directamente a Amazon S3
 @app.post("/api/upload/presigned-url")
 async def get_presigned_url(request: UploadRequest):
@@ -130,16 +144,37 @@ async def get_presigned_url(request: UploadRequest):
         )
 
         public_url = f"https://{S3_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{key}"
-        
-        
+
+        # Registrar la subida en el historial local
+        registrar_subida_historica(key)
+
+        # Registrar los metadatos en DynamoDB
+        dynamodb_table.put_item(
+            Item={
+                "id_tabla": str(uuid.uuid4()),
+                "nombre_proyecto": "ArchivaCloud P-05",
+                "nombre_archivo": request.fileName,
+                "s3_key": key,
+                "tipo": request.fileType,
+                "tamano": request.fileSize,
+                "fecha_subida": datetime.now(timezone.utc).isoformat()
+            }
+        )
 
         return {
             "presignedUrl": presigned_url,
             "key": key,
             "publicUrl": public_url
         }
-    except Exception:
-        raise HTTPException(status_code=500, detail="Error interno al generar la URL firmada.")
+    
+    except Exception as e:
+        print("ERROR:", e)
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+    
+
     
 @app.get("/api/files")
 async def list_files():

@@ -37,7 +37,7 @@ Firma docente:	__________________________
 
 
 Sprint N° 2
-Fecha:	118/06/2026
+Fecha:	18/06/2026
 Lo que hicimos esta semana (4-6 líneas):	
 
 Durante el Sprint 2 se implementaron los endpoints para listar y eliminar archivos almacenados en AWS S3. Además, se integró un frontend en React capaz de consumir la API desarrollada en FastAPI. Se realizaron pruebas de conectividad entre React, FastAPI y AWS S3, verificando la correcta visualización de archivos almacenados en el bucket. También se solucionaron problemas relacionados con credenciales temporales, configuración del bucket y políticas de acceso.
@@ -72,3 +72,47 @@ Preparar la documentación y evidencias para la entrega final.
 
 Firmas (ambos integrantes):	__________________________   __________________________
 Firma docente:	__________________________
+
+
+Sprint N° 3
+
+**Fecha:** 25/06/2026
+
+### Lo que hicimos esta semana (4-6 líneas):
+
+Durante el Sprint 3 se fortaleció la seguridad del proyecto mediante la implementación de las medidas solicitadas en la pauta SEC-01 a SEC-10. Se incorporaron validaciones de tipo y tamaño de archivos utilizando Pydantic, se sanitizó el nombre de los archivos antes de almacenarlos y se configuró el acceso mediante variables de entorno. Además, se implementó el contador de archivos subidos durante la última semana utilizando un historial local (`history.json`), se verificó el cifrado del bucket S3 y se realizaron pruebas funcionales de subida, listado y eliminación de archivos.
+
+### Problemas encontrados:
+
+* Restricciones de AWS Academy para consultar y modificar políticas IAM.
+* Dificultades para probar la validación del límite de 12 MB por no disponer de archivos de gran tamaño.
+* Resultados de `pip-audit` mostrando vulnerabilidades en paquetes que no pertenecían al proyecto.
+* El contador semanal disminuía al eliminar archivos del bucket S3.
+
+### Cómo los resolvimos:
+
+* Se documentaron las limitaciones del entorno AWS Academy respecto a IAM.
+* Se generó un archivo de prueba superior a 12 MB para validar correctamente la restricción.
+* Se revisó el archivo `requirements.txt` y se verificó que las dependencias utilizadas estuvieran actualizadas.
+* Se implementó un archivo `history.json` para conservar el historial de subidas y calcular el contador semanal sin depender únicamente del contenido actual del bucket.
+
+### Usos de IA esta semana:
+
+* Apoyo en la implementación de las medidas de seguridad SEC-01 a SEC-10.
+* Asistencia para configurar CORS y validar el uso de variables de entorno.
+* Ayuda en el diseño e implementación del contador de archivos subidos durante la última semana.
+* Revisión del código, resolución de errores y elaboración de la documentación técnica del proyecto.
+
+### Próximos pasos:
+
+* Finalizar la documentación del proyecto (README, reporte de seguridad y documentación de la feature extra).
+* Preparar la defensa técnica del proyecto y repasar el funcionamiento del backend.
+* Integrar DynamoDB como almacenamiento de metadatos de los archivos.
+* Realizar la revisión final del repositorio antes de generar la versión 1.0.0.
+
+**Firmas (ambos integrantes):**
+__________________________  __________________________
+
+**Firma docente:**
+
+---
