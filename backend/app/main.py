@@ -1,19 +1,25 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field, field_validator
-import boto3
+import json
 import os
 import re
 import uuid
-import json
 from datetime import datetime, timezone, timedelta
+
+import boto3
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field, field_validator
+
+
+# CONFIGURACIÓN DE LA APLICACIÓN
 
 # Cargar variables de entorno
 load_dotenv()
 
 # Inicializa la aplicación FastAPI
 app = FastAPI()
+
+
 
 # Configuración CORS para permitir peticiones desde el frontend
 app.add_middleware(
@@ -39,7 +45,11 @@ s3_client = boto3.client(
     aws_session_token=os.getenv("AWS_SESSION_TOKEN")
 )
 
+# Archivo local utilizado para almacenar el historial
+# de subidas y calcular el contador semanal.
 HISTORY_FILE = "history.json"
+
+
 
 # Recurso de DynamoDB
 dynamodb = boto3.resource(
@@ -80,7 +90,9 @@ def registrar_subida_historica(key: str):
 
 
 
-# Modelo que valida los datos recibidos para la subida de archivos
+# Modelo que representa los datos enviados por el
+# frontend al solicitar una URL prefirmada.
+
 class UploadRequest(BaseModel): 
     fileName: str
     fileType: str
@@ -125,7 +137,10 @@ async def test_env():
     return {"bucket": S3_BUCKET, "region": AWS_REGION}
 
 
-# Genera una URL firmada para subir archivos directamente a Amazon S3
+# Genera una URL prefirmada para que el frontend
+# pueda subir el archivo directamente a Amazon S3
+# sin pasar el contenido por el backend.
+
 @app.post("/api/upload/presigned-url")
 async def get_presigned_url(request: UploadRequest):
     try:
@@ -148,6 +163,8 @@ async def get_presigned_url(request: UploadRequest):
         registrar_subida_historica(key)
 
         try:
+            # Guarda los metadatos del archivo en DynamoDB.
+            # No almacena el archivo, solamente su información.
             dynamodb_table.put_item(
                 Item={
                     "id_tabla": str(uuid.uuid4()),
@@ -194,7 +211,7 @@ async def list_files():
                 "lastModified": obj["LastModified"].isoformat() 
             })
 
-        # --- LÓGICA INTELIGENTE DE SINCRONIZACIÓN --- # Carga el historial local de subidas si existe
+        # Sincroniza el historial local con los archivos existentes en Amazon S3 para mantener el contador
         historial = []
         if os.path.exists(HISTORY_FILE):
             try:
@@ -244,7 +261,10 @@ async def list_files():
 
     except Exception:
         raise HTTPException(status_code=500, detail="Error al obtener la lista de archivos.")
+    
 
+# Elimina un archivo del bucket de Amazon S3
+# utilizando la clave recibida desde el frontend.
 @app.delete("/api/files/{key:path}")
 async def delete_file(key: str):
     try:

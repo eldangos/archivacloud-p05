@@ -59,6 +59,7 @@ Para lograr este comportamiento se implementó un historial local (`history.json
 - Amazon S3
 - Python
 - JSON (`history.json`)
+- Amazon DynamoDB
 
 ---
 

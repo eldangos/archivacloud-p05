@@ -32,6 +32,7 @@ Sistema de almacenamiento de archivos en Amazon S3.
 # Tecnologías (Stack)
 - Backend: Python 3.10+, FastAPI, Boto3, Uvicorn
 - Frontend: React 18 + Vite
+- Amazon DynamoDB
 - Nube: AWS S3 y IAM
 
 # Cómo ejecutar el backend localmente
