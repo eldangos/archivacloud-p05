@@ -48,6 +48,7 @@ Sistema de almacenamiento de archivos en Amazon S3.
 
 # Arquitectura
 El frontend (React) solicita una URL prefirmada al backend (FastAPI). Una vez obtenida, el frontend sube el archivo directamente a Amazon S3 sin sobrecargar el servidor backend [2, 3].
+
 ![Diagrama de Arquitectura](docs/arquitectura.jpg)
 
 # Variables de Entorno
