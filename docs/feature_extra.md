@@ -22,7 +22,7 @@ Posteriormente, cuando el frontend consulta el endpoint:
 
 ```
 GET /api/files
-```z    
+```
 
 el backend:
 
